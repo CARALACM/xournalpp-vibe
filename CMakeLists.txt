@@ -373,7 +373,7 @@ if (ENABLE_GTEST)
 endif (ENABLE_GTEST)
 
 ## Man page generation ##
-add_subdirectory (man)
+# add_subdirectory (man)
 
 ## Tests ##
 # ./test is added via src to enable cleaner includes

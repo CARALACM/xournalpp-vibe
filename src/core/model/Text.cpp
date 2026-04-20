@@ -35,6 +35,7 @@ auto Text::cloneText() const -> std::unique_ptr<Text> {
     text->y = this->y;
     text->width = this->width;
     text->height = this->height;
+    text->wrapWidth = this->wrapWidth;
     text->cloneAudioData(this);
     text->snappedBounds = this->snappedBounds;
     text->sizeCalculated = this->sizeCalculated;
@@ -67,6 +68,12 @@ void Text::setText(std::string text) {
 void Text::calcSize() const {
     auto layout = createPangoLayout();
     pango_layout_set_text(layout.get(), this->text.c_str(), static_cast<int>(this->text.length()));
+
+    if (this->wrapWidth > 0) {
+        pango_layout_set_width(layout.get(), static_cast<int>(this->wrapWidth * PANGO_SCALE));
+        pango_layout_set_wrap(layout.get(), PANGO_WRAP_WORD_CHAR);
+    }
+
     int w = 0;
     int h = 0;
     pango_layout_get_size(layout.get(), &w, &h);
@@ -84,6 +91,13 @@ void Text::setHeight(double height) {
     this->height = height;
     this->updateSnapping();
 }
+
+void Text::setWrapWidth(double wrapWidth) {
+    this->wrapWidth = wrapWidth;
+    sizeCalculated = false;
+}
+
+auto Text::getWrapWidth() const -> double { return this->wrapWidth; }
 
 void Text::setInEditing(bool inEditing) { this->inEditing = inEditing; }
 

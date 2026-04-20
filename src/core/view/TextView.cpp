@@ -49,5 +49,10 @@ void TextView::draw(const Context& ctx) const {
     const std::string& content = text->getText();
     pango_layout_set_text(layout.get(), content.c_str(), static_cast<int>(content.length()));
 
+    if (text->getWrapWidth() > 0) {
+        pango_layout_set_width(layout.get(), static_cast<int>(text->getWrapWidth() * PANGO_SCALE));
+        pango_layout_set_wrap(layout.get(), PANGO_WRAP_WORD_CHAR);
+    }
+
     pango_cairo_show_layout(ctx.cr, layout.get());
 }

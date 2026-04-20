@@ -45,6 +45,9 @@ public:
     void setWidth(double width);
     void setHeight(double height);
 
+    void setWrapWidth(double wrapWidth);
+    double getWrapWidth() const;
+
     void setInEditing(bool inEditing);
     bool isInEditing() const;
 
@@ -75,6 +78,8 @@ private:
     XojFont font;
 
     std::string text;
+
+    double wrapWidth = -1.0;
 
     bool inEditing = false;
 };

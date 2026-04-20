@@ -880,6 +880,11 @@ void TextEditor::blinkCallback(TextEditor* te) {
 }
 
 void TextEditor::setTextToPangoLayout(PangoLayout* pl) const {
+    if (this->textElement->getWrapWidth() > 0) {
+        pango_layout_set_width(pl, static_cast<int>(this->textElement->getWrapWidth() * PANGO_SCALE));
+        pango_layout_set_wrap(pl, PANGO_WRAP_WORD_CHAR);
+    }
+
     std::string_view preed(preeditString);
 
     if (!preed.empty()) {
@@ -1079,6 +1084,9 @@ void TextEditor::initializeEditionAt(double x, double y) {
         this->textElement->setFont(control->getSettings()->getFont());
         this->textElement->setX(x);
         this->textElement->setY(y - this->textElement->getElementHeight() / 2);
+        
+        constexpr double RIGHT_PADDING = 20.0;
+        this->textElement->setWrapWidth(std::max(0.0, this->page->getWidth() - x - RIGHT_PADDING));
 
 #ifdef ENABLE_AUDIO
         if (auto audioController = control->getAudioController(); audioController && audioController->isRecording()) {

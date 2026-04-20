@@ -360,6 +360,10 @@ void LoadHandler::addText(std::string font, double size, double x, double y, Col
     this->text->setX(x);
     this->text->setY(y);
     this->text->setColor(color);
+    if (this->page) {
+        constexpr double RIGHT_PADDING = 20.0;
+        this->text->setWrapWidth(std::max(0.0, this->page->getWidth() - x - RIGHT_PADDING));
+    }
 
     setAudioAttributes(*this->text, std::move(filename), timestamp);
 }

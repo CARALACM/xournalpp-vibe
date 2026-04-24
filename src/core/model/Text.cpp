@@ -67,7 +67,13 @@ void Text::setText(std::string text) {
 
 void Text::calcSize() const {
     auto layout = createPangoLayout();
-    pango_layout_set_text(layout.get(), this->text.c_str(), static_cast<int>(this->text.length()));
+    GError* error = nullptr;
+    if (!pango_parse_markup(this->text.c_str(), static_cast<int>(this->text.length()), 0, nullptr, nullptr, nullptr, &error)) {
+        pango_layout_set_text(layout.get(), this->text.c_str(), static_cast<int>(this->text.length()));
+        g_clear_error(&error);
+    } else {
+        pango_layout_set_markup(layout.get(), this->text.c_str(), static_cast<int>(this->text.length()));
+    }
 
     if (this->wrapWidth > 0) {
         pango_layout_set_width(layout.get(), static_cast<int>(this->wrapWidth * PANGO_SCALE));
@@ -186,7 +192,13 @@ auto Text::findText(const std::string& search) const -> std::vector<XojPdfRectan
     }
 
     auto layout = this->createPangoLayout();
-    pango_layout_set_text(layout.get(), this->text.c_str(), static_cast<int>(this->text.length()));
+    GError* error = nullptr;
+    if (!pango_parse_markup(this->text.c_str(), static_cast<int>(this->text.length()), 0, nullptr, nullptr, nullptr, &error)) {
+        pango_layout_set_text(layout.get(), this->text.c_str(), static_cast<int>(this->text.length()));
+        g_clear_error(&error);
+    } else {
+        pango_layout_set_markup(layout.get(), this->text.c_str(), static_cast<int>(this->text.length()));
+    }
 
 
     std::string text = StringUtils::toLowerCase(this->text);

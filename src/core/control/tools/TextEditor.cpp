@@ -898,10 +898,23 @@ void TextEditor::setTextToPangoLayout(PangoLayout* pl) const {
 
         pango_layout_set_attributes(pl, attrlist.get());
 
-        pango_layout_set_text(pl, txt.c_str(), static_cast<int>(txt.length()));
+        GError* error = nullptr;
+        if (!pango_parse_markup(txt.c_str(), static_cast<int>(txt.length()), 0, nullptr, nullptr, nullptr, &error)) {
+            pango_layout_set_text(pl, txt.c_str(), static_cast<int>(txt.length()));
+            g_clear_error(&error);
+        } else {
+            pango_layout_set_markup(pl, txt.c_str(), static_cast<int>(txt.length()));
+        }
     } else {
         setSelectionAttributesToPangoLayout(pl);
-        pango_layout_set_text(pl, cloneToCString(this->buffer.get()).get(), -1);
+        auto cstr = cloneToCString(this->buffer.get());
+        GError* error = nullptr;
+        if (!pango_parse_markup(cstr.get(), -1, 0, nullptr, nullptr, nullptr, &error)) {
+            pango_layout_set_text(pl, cstr.get(), -1);
+            g_clear_error(&error);
+        } else {
+            pango_layout_set_markup(pl, cstr.get(), -1);
+        }
     }
 }
 
@@ -1037,6 +1050,20 @@ void TextEditor::finalizeEdition() {
     if (hasDoubleDollar || hasLatexBrackets || hasDollarPair) {
         std::regex fracRegex("\\\\frac\\{([^\\}]+)\\}\\{([^\\}]+)\\}");
         content = std::regex_replace(content, fracRegex, "$1 / $2");
+
+        // Formato de texto LaTeX a HTML Pango
+        content = std::regex_replace(content, std::regex("\\\\textbf\\{([^\\}]+)\\}"), "<b>$1</b>");
+        content = std::regex_replace(content, std::regex("\\\\textit\\{([^\\}]+)\\}"), "<i>$1</i>");
+        content = std::regex_replace(content, std::regex("\\\\emph\\{([^\\}]+)\\}"), "<i>$1</i>");
+        content = std::regex_replace(content, std::regex("\\\\underline\\{([^\\}]+)\\}"), "<u>$1</u>");
+        content = std::regex_replace(content, std::regex("\\\\texttt\\{([^\\}]+)\\}"), "<tt>$1</tt>");
+        content = std::regex_replace(content, std::regex("\\\\textcolor\\{([^\\}]+)\\}\\{([^\\}]+)\\}"), "<span color=\"$1\">$2</span>");
+
+        // Superíndices y Subíndices
+        content = std::regex_replace(content, std::regex("\\^\\{([^\\}]+)\\}"), "<sup>$1</sup>");
+        content = std::regex_replace(content, std::regex("\\^([a-zA-Z0-9])"), "<sup>$1</sup>");
+        content = std::regex_replace(content, std::regex("_\\{([^\\}]+)\\}"), "<sub>$1</sub>");
+        content = std::regex_replace(content, std::regex("_([a-zA-Z0-9])"), "<sub>$1</sub>");
 
         std::vector<std::pair<std::string, std::string>> replacements = {
             {"\\partial", "∂"}, {"\\nabla", "∇"},

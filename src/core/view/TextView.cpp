@@ -47,7 +47,13 @@ void TextView::draw(const Context& ctx) const {
 
     auto layout = initPango(ctx.cr, text);
     const std::string& content = text->getText();
-    pango_layout_set_text(layout.get(), content.c_str(), static_cast<int>(content.length()));
+    GError* error = nullptr;
+    if (!pango_parse_markup(content.c_str(), static_cast<int>(content.length()), 0, nullptr, nullptr, nullptr, &error)) {
+        pango_layout_set_text(layout.get(), content.c_str(), static_cast<int>(content.length()));
+        g_clear_error(&error);
+    } else {
+        pango_layout_set_markup(layout.get(), content.c_str(), static_cast<int>(content.length()));
+    }
 
     if (text->getWrapWidth() > 0) {
         pango_layout_set_width(layout.get(), static_cast<int>(text->getWrapWidth() * PANGO_SCALE));

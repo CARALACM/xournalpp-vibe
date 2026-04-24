@@ -1043,11 +1043,6 @@ void TextEditor::finalizeEdition() {
         content = std::regex_replace(content, std::regex("\\\\texttt\\{([^\\}]+)\\}"), "<tt>$1</tt>");
         content = std::regex_replace(content, std::regex("\\\\textcolor\\{([^\\}]+)\\}\\{([^\\}]+)\\}"), "<span color=\"$1\">$2</span>");
 
-        // Superíndices y Subíndices
-        content = std::regex_replace(content, std::regex("\\^\\{([^\\}]+)\\}"), "<sup>$1</sup>");
-        content = std::regex_replace(content, std::regex("\\^([a-zA-Z0-9])"), "<sup>$1</sup>");
-        content = std::regex_replace(content, std::regex("_\\{([^\\}]+)\\}"), "<sub>$1</sub>");
-        content = std::regex_replace(content, std::regex("_([a-zA-Z0-9])"), "<sub>$1</sub>");
 
         std::vector<std::pair<std::string, std::string>> replacements = {
             {"\\partial", "∂"}, {"\\nabla", "∇"},

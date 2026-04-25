@@ -35,6 +35,8 @@ void PdfExportViaPythonJob::run() {
 
     fs::path tempFile = fs::temp_directory_path() / "xournalpp_temp_export.pdf";
 
+    pdfe->setExportBackground(EXPORT_BACKGROUND_NONE);
+
     if (!pdfe->createPdf(tempFile, false)) {
         this->errorMsg = pdfe->getLastError();
         if (control->getWindow()) {

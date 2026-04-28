@@ -1219,7 +1219,7 @@ void TextEditor::initializeEditionAt(double x, double y) {
         this->textElement->setX(x);
         this->textElement->setY(y - this->textElement->getElementHeight() / 2);
         
-        constexpr double RIGHT_PADDING = 20.0;
+        constexpr double RIGHT_PADDING = 12.0;
         this->textElement->setWrapWidth(std::max(0.0, this->page->getWidth() - x - RIGHT_PADDING));
 
 #ifdef ENABLE_AUDIO

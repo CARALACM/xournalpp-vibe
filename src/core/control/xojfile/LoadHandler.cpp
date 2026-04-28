@@ -373,7 +373,7 @@ void LoadHandler::addText(std::string font, double size, double x, double y, Col
     this->text->setCreationDate(std::move(this->pendingDate));
     this->pendingDate.clear();
     if (this->page) {
-        constexpr double RIGHT_PADDING = 20.0;
+        constexpr double RIGHT_PADDING = 12.0;
         this->text->setWrapWidth(std::max(0.0, this->page->getWidth() - x - RIGHT_PADDING));
     }
 

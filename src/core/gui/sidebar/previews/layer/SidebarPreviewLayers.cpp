@@ -129,7 +129,7 @@ void SidebarPreviewLayers::updateSelectedLayer() {
 }
 
 void SidebarPreviewLayers::layerSelected(Layer::Index layerId) {
-    if (layerId != 0) {  // We can't select the background
+    if (layerId != 0 && lc->getLayerNameById(layerId) != "Dates") {  // We can't select the background or Dates
         lc->switchToLay(layerId);
         updateSelectedLayer();
     }

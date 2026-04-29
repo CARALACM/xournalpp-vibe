@@ -11,6 +11,9 @@
 #include <string>      // for string
 #include <utility>     // for move
 
+#include <map>
+#include <set>
+
 #include "control/AudioController.h"                             // for Audi...
 #include "control/ClipboardHandler.h"                            // for Clip...
 #include "control/CompassController.h"                           // for Comp...
@@ -1538,6 +1541,7 @@ void Control::replaceDocument(std::unique_ptr<Document> doc, int scrollToPage) {
     fs::path filepath = doc->getFilepath();
 
     this->doc->lock();
+    ensureDateLabels(doc.get());
     *this->doc = *doc;  // This calls fireDocumentChanged(DOCUMENT_CHANGE_COMPLETE). No need to fire it again
     this->doc->unlock();
 
@@ -2131,6 +2135,7 @@ void Control::saveImpl(bool saveAs, std::function<void(bool)> callback) {
     auto doSave = [ctrl = this, cb = std::move(callback)]() {
         // clear selection before saving
         ctrl->clearSelectionEndText();
+        ctrl->ensureDateLabels(ctrl->doc);
 
         auto* job = new SaveJob(ctrl, std::move(cb));
         ctrl->scheduler->addJob(job, JOB_PRIORITY_URGENT);
@@ -2714,4 +2719,129 @@ auto Control::loadPaletteFromSettings() -> void {
         this->palette->parseErrorDialog(e);
         this->palette->load_default();
     }
+}
+
+void Control::ensureDateLabels(Document* document) {
+    if (!document) {
+        return;
+    }
+
+    document->lock();
+
+    for (size_t pIdx = 0; pIdx < document->getPageCount(); ++pIdx) {
+        PageRef page = document->getPage(pIdx);
+        double pageWidth = page->getWidth();
+
+        // 1. Find or create "Dates" layer and ensure it's the top-most
+        Layer* dateLayer = nullptr;
+        auto& layers = page->getLayers();
+        for (auto it = layers.begin(); it != layers.end(); ++it) {
+            if ((*it)->getName() == "Dates") {
+                dateLayer = *it;
+                layers.erase(it);
+                break;
+            }
+        }
+
+        if (!dateLayer) {
+            dateLayer = new Layer();
+            dateLayer->setName("Dates");
+        }
+        layers.push_back(dateLayer);
+
+        // 2. Scan all layers, remove existing decorations, and gather dates
+        std::map<std::string, double> firstYByDate;
+
+        for (Layer* l : layers) {
+            auto& elements = l->getElements();
+            for (auto it = elements.begin(); it != elements.end(); ) {
+                std::string cd = (*it)->getCreationDate();
+                if (cd.length() >= 10) {
+                    std::string dateStr = cd.substr(0, 10);
+                    bool isDecoration = (cd.length() >= 19 && cd.substr(11) == "00:00:00");
+
+                    if (isDecoration) {
+                        it = elements.erase(it);
+                    } else {
+                        if (firstYByDate.find(dateStr) == firstYByDate.end() || (*it)->getY() < firstYByDate[dateStr]) {
+                            firstYByDate[dateStr] = (*it)->getY();
+                        }
+                        ++it;
+                    }
+                } else {
+                    ++it;
+                }
+            }
+        }
+
+        // 3. Add fresh labels to the dateLayer
+        for (auto const& [date, y] : firstYByDate) {
+            auto label = std::make_unique<Text>();
+            label->setText(date);
+            
+            label->getFont().setName("Sans");
+            label->getFont().setSize(8);
+            
+            double labelWidth = 45; 
+            label->setX(pageWidth - labelWidth - 12); 
+            label->setY(y + 3 - 12); 
+            label->setColor(Color(0xff808080U)); 
+
+            std::vector<Point> pts = {
+                {360, label->getY()},
+                {408, label->getY()},
+                {408, label->getY() + 12},
+                {360, label->getY() + 12},
+                {360, label->getY()}
+            };
+
+            // White background box
+            auto whiteBox = std::make_unique<Stroke>();
+            whiteBox->setToolType(StrokeTool::PEN);
+            whiteBox->setColor(Color(0xffffffffU)); 
+            whiteBox->setWidth(0.1);
+            whiteBox->setFill(255); 
+            whiteBox->setPointVector(pts);
+            whiteBox->setCreationDate(date + " 00:00:00");
+
+            // Frame around the date
+            auto frame = std::make_unique<Stroke>();
+            frame->setToolType(StrokeTool::PEN);
+            frame->setColor(Color(0xff808080U)); 
+            frame->setWidth(0.5); 
+            frame->setPointVector(pts);
+            frame->setCreationDate(date + " 00:00:00");
+
+            label->setCreationDate(date + " 00:00:00");
+
+            dateLayer->addElement(std::move(whiteBox));
+            dateLayer->addElement(std::move(frame));
+            dateLayer->addElement(std::move(label));
+        }
+
+        // 4. Ensure there is at least one layer other than "Dates"
+        bool hasOther = false;
+        for (Layer* l : layers) {
+            if (l != dateLayer) {
+                hasOther = true;
+                break;
+            }
+        }
+        if (!hasOther) {
+            layers.insert(layers.begin(), new Layer());
+        }
+
+        // 5. Ensure the currently selected layer is not "Dates"
+        size_t currentId = page->getSelectedLayerId();
+        if (currentId != 0 && page->getSelectedLayer()->getName() == "Dates") {
+            for (size_t i = 0; i < layers.size(); ++i) {
+                if (layers[i]->getName() != "Dates") {
+                    page->setSelectedLayerId(i + 1); // IDs are 1-based
+                    break;
+                }
+            }
+        }
+    }
+
+    document->unlock();
 }

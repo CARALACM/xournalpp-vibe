@@ -452,6 +452,7 @@ private:
      * success. WARNING: Be sure the active document has been saved (or discarded) before calling openXoppFile()
      */
     void openXoppFile(fs::path filepath, int scrollToPage, std::function<void(bool)> callback);
+    void ensureDateLabels(Document* document);
 
     /**
      * Opens the provided path and parse it as a PDF file. Then forcibly replaces the currently opened document with a

@@ -297,7 +297,7 @@ void LayerController::switchToLay(Layer::Index layerId, bool hideShow, bool clea
     }
 
     PageRef p = getCurrentPage();
-    if (!p) {
+    if (!p || (layerId != 0 && getLayerNameById(layerId) == "Dates")) {
         return;
     }
 

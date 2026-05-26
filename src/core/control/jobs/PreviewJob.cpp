@@ -56,6 +56,7 @@ void PreviewJob::drawPage() {
     Document* doc = this->sidebarPreview->sidebar->getControl()->getDocument();
     DocumentView view;
     view.setPdfCache(this->sidebarPreview->sidebar->getCache());
+    view.setInvertColors(this->sidebarPreview->sidebar->getControl()->isInvertColors());
     PreviewRenderType type = this->sidebarPreview->getRenderType();
     Layer::Index layer = 0;
 

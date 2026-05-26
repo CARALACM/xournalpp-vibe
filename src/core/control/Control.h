@@ -187,8 +187,13 @@ public:
 
     void updateWindowTitle();
     void setViewPairedPages(bool enabled);
-    void setViewFullscreenMode(bool enabled);
     void setViewPresentationMode(bool enabled);
+    void setViewFullscreenMode(bool enabled);
+
+    bool getInvertColorsOverride() const;
+    void setInvertColorsOverride(bool overrideState);
+    bool isInvertColors() const;
+    void themeChanged();
     void setPairsOffset(int numOffset);
     void setViewColumns(int numColumns);
     void setViewRows(int numRows);
@@ -574,6 +579,7 @@ private:
     PluginController* pluginController;
 
     std::unique_ptr<ActionDatabase> actionDB;
+    bool invertColorsOverride = false;
     template <Action a>
     friend struct ActionProperties;
 };

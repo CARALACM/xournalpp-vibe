@@ -306,18 +306,24 @@ auto TextEditor::imDeleteSurroundingCallback(GtkIMContext* context, gint offset,
 }
 
 auto TextEditor::onKeyPressEvent(const KeyEvent& event) -> bool {
+    Control* ctrl = this->control;
 
     // IME needs to handle the input first so the candidate window works correctly
     if (gtk_im_context_filter_keypress(this->imContext.get(), event.sourceEvent.get())) {
-        this->needImReset = true;
+        // If 'this' is destroyed during the filter keypress (e.g. from commit callbacks),
+        // we must avoid accessing any members.
+        if (ctrl->getWindow() && ctrl->getWindow()->getXournal() && 
+            ctrl->getWindow()->getXournal()->getTextEditor() == this) {
+            this->needImReset = true;
 
-        GtkTextIter iter = getIteratorAtCursor(this->buffer.get());
-        bool canInsert = gtk_text_iter_can_insert(&iter, true);
+            GtkTextIter iter = getIteratorAtCursor(this->buffer.get());
+            bool canInsert = gtk_text_iter_can_insert(&iter, true);
 
-        if (canInsert) {
-            control->getCursor()->setInvisible(true);
-        } else {
-            this->resetImContext();
+            if (canInsert) {
+                ctrl->getCursor()->setInvisible(true);
+            } else {
+                this->resetImContext();
+            }
         }
         return true;
     }
@@ -671,31 +677,33 @@ void TextEditor::updateCursorBox() {
 
     // Scroll so the active cursor line is always at the top of the visible area.
     // This is especially useful when an on-screen keyboard covers the bottom of the screen.
-    double newCursorY = this->cursorBox.minY;
-    if (std::abs(newCursorY - this->lastScrolledCursorY) > 0.5) {
-        this->lastScrolledCursorY = newCursorY;
+    if (this->textElement) {
+        double newCursorY = this->cursorBox.minY;
+        if (std::abs(newCursorY - this->lastScrolledCursorY) > 0.5) {
+            this->lastScrolledCursorY = newCursorY;
 
-        MainWindow* win = this->control->getWindow();
-        if (win) {
-            XournalView* xournal = win->getXournal();
-            auto* doc = this->control->getDocument();
-            doc->lock_shared();
-            size_t pageIdx = doc->indexOf(this->page);
-            doc->unlock_shared();
+            MainWindow* win = this->control->getWindow();
+            if (win) {
+                XournalView* xournal = win->getXournal();
+                auto* doc = this->control->getDocument();
+                doc->lock_shared();
+                size_t pageIdx = doc->indexOf(this->page);
+                doc->unlock_shared();
 
-            XojPageView* pageView = xournal->getViewFor(pageIdx);
-            if (pageView) {
-                double zoom = xournal->getZoom();
-                Layout* layout = xournal->getLayout();
-                auto visRect = layout->getVisibleRect();
+                XojPageView* pageView = xournal->getViewFor(pageIdx);
+                if (pageView) {
+                    double zoom = xournal->getZoom();
+                    Layout* layout = xournal->getLayout();
+                    auto visRect = layout->getVisibleRect();
 
-                // Cursor Y position in layout pixel coordinates
-                double cursorLayoutY = pageView->getPixelPosition().y +
-                                       (this->textElement->getY() + newCursorY) * zoom;
+                    // Cursor Y position in layout pixel coordinates
+                    double cursorLayoutY = pageView->getPixelPosition().y +
+                                           (this->textElement->getY() + newCursorY) * zoom;
 
-                // Scroll vertically so the active line appears at the top with a small margin
-                constexpr double TOP_MARGIN_PX = 100.0;
-                layout->scrollAbs(visRect.x, cursorLayoutY - TOP_MARGIN_PX);
+                    // Scroll vertically so the active line appears at the top with a small margin
+                    constexpr double TOP_MARGIN_PX = 100.0;
+                    layout->scrollAbs(visRect.x, cursorLayoutY - TOP_MARGIN_PX);
+                }
             }
         }
     }
@@ -853,14 +861,19 @@ void TextEditor::backspace() {
 
 void TextEditor::linebreak() {
     this->resetImContext();
+    Control* ctrl = this->control;
     iMCommitCallback(nullptr, "\n", this);
 
-    control->getCursor()->setInvisible(true);
+    if (ctrl->getWindow() && ctrl->getWindow()->getXournal() && 
+        ctrl->getWindow()->getXournal()->getTextEditor() == this) {
+        ctrl->getCursor()->setInvisible(true);
+    }
 }
 
 void TextEditor::tabulation() {
     resetImContext();
     Settings* settings = control->getSettings();
+    Control* ctrl = this->control;
     if (!settings->getUseSpacesAsTab()) {
         iMCommitCallback(nullptr, "\t", this);
     } else {
@@ -868,7 +881,10 @@ void TextEditor::tabulation() {
         iMCommitCallback(nullptr, indent.c_str(), this);
     }
 
-    control->getCursor()->setInvisible(true);
+    if (ctrl->getWindow() && ctrl->getWindow()->getXournal() && 
+        ctrl->getWindow()->getXournal()->getTextEditor() == this) {
+        ctrl->getCursor()->setInvisible(true);
+    }
 }
 
 
@@ -911,8 +927,10 @@ void TextEditor::blinkCallback(TextEditor* te) {
     te->blinkTimer = g_timeout_add(time, xoj::util::wrap_for_once_v<blinkCallback>, te);
 
     Range dirtyRange = te->cursorBox;
-    dirtyRange.translate(te->textElement->getX(), te->textElement->getY());
-    te->viewPool->dispatch(xoj::view::TextEditionView::FLAG_DIRTY_REGION, dirtyRange);
+    if (te->textElement) {
+        dirtyRange.translate(te->textElement->getX(), te->textElement->getY());
+        te->viewPool->dispatch(xoj::view::TextEditionView::FLAG_DIRTY_REGION, dirtyRange);
+    }
 }
 
 void TextEditor::setTextToPangoLayout(PangoLayout* pl) const {
@@ -1046,8 +1064,10 @@ void TextEditor::repaintCursorAfterChange() {
     Range dirtyRange = this->cursorBox;
     this->updateCursorBox();
     dirtyRange = dirtyRange.unite(this->cursorBox);
-    dirtyRange.translate(this->textElement->getX(), this->textElement->getY());
-    this->viewPool->dispatch(xoj::view::TextEditionView::FLAG_DIRTY_REGION, dirtyRange);
+    if (this->textElement) {
+        dirtyRange.translate(this->textElement->getX(), this->textElement->getY());
+        this->viewPool->dispatch(xoj::view::TextEditionView::FLAG_DIRTY_REGION, dirtyRange);
+    }
 }
 
 void TextEditor::finalizeEdition() {

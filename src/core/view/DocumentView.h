@@ -55,6 +55,7 @@ public:
      * Mark stroke with Audio
      */
     void setMarkAudioStroke(bool markAudioStroke);
+    void setInvertColors(bool invertColors);
 
     // API for special drawing, usually you won't call this methods
 public:
@@ -89,5 +90,6 @@ private:
     PdfCache* pdfCache = nullptr;
     bool dontRenderEditingStroke = false;
     bool markAudioStroke = false;
+    bool invertColors = false;
 
 };

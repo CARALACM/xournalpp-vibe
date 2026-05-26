@@ -33,6 +33,7 @@ constexpr const char* ACTION_NAMES[] = {  // Action to string conversion map
         "paired-pages-offset",
         "presentation-mode",
         "fullscreen",
+        "invert-colors",
         "show-sidebar",
         "show-toolbar",
         "set-layout-vertical",

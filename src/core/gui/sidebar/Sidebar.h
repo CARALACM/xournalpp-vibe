@@ -39,6 +39,7 @@ public:
      * Layout sidebar
      */
     void layout();
+    void repaintPreviews();
 
     /**
      * A page was selected, so also select this page in the sidebar

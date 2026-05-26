@@ -508,6 +508,14 @@ void EditSelectionContents::paint(cairo_t* cr, double x, double y, double rotati
         view.draw(xoj::view::Context::createDefault(cr2));
 
         cairo_destroy(cr2);
+
+        if (this->getSourceView()->getXournal()->getControl()->isInvertColors()) {
+            cairo_t* crInv = cairo_create(this->crBuffer);
+            cairo_set_operator(crInv, CAIRO_OPERATOR_DIFFERENCE);
+            cairo_set_source_rgb(crInv, 1.0, 1.0, 1.0);
+            cairo_mask_surface(crInv, this->crBuffer, 0, 0);
+            cairo_destroy(crInv);
+        }
     }
 
     cairo_save(cr);

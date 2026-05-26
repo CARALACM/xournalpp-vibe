@@ -312,6 +312,17 @@ struct ActionProperties<Action::FULLSCREEN> {
 };
 
 template <>
+struct ActionProperties<Action::INVERT_COLORS> {
+    using state_type = bool;
+    static state_type initialState(Control* ctrl) { return ctrl->getInvertColorsOverride(); }
+    static void callback(GSimpleAction* ga, GVariant* p, Control* ctrl) {
+        g_simple_action_set_state(ga, p);
+        bool enabled = g_variant_get_boolean(p);
+        ctrl->setInvertColorsOverride(enabled);
+    }
+};
+
+template <>
 struct ActionProperties<Action::SHOW_SIDEBAR> {
     using state_type = bool;
     static state_type initialState(Control* ctrl) { return ctrl->getSettings()->isSidebarVisible(); }

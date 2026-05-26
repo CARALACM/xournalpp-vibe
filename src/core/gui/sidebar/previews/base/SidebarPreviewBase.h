@@ -46,6 +46,8 @@ public:
      */
     virtual void updatePreviews() = 0;
 
+    void repaintPreviews();
+
     /**
      * @overwrite
      */

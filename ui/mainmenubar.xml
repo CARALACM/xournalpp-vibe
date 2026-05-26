@@ -197,6 +197,11 @@
      <attribute name="action">win.fullscreen</attribute>
      <attribute name="accel">F11</attribute>
     </item>
+    <item>
+     <attribute name="label" translatable="yes">Invert Colors</attribute>
+     <attribute name="action">win.invert-colors</attribute>
+     <attribute name="accel">&lt;Ctrl&gt;i</attribute>
+    </item>
    </section>
    <section>
     <item>

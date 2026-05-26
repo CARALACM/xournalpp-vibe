@@ -111,6 +111,7 @@ void RenderJob::renderToBuffer(cairo_t* cr) const {
     localView.setMarkAudioStroke(this->view->getXournal()->getControl()->getToolHandler()->getToolType() ==
                                  TOOL_PLAY_OBJECT);
     localView.setPdfCache(this->view->xournal->getCache());
+    localView.setInvertColors(false);
 
     std::shared_lock<Document> lock(*this->view->xournal->getDocument());
     localView.drawPage(this->view->page, cr, false);

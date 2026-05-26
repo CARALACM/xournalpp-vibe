@@ -26,3 +26,11 @@ Xournal++ features:
 - Text tool for adding text in different fonts, colors, and sizes (**enhanced in this fork with auto breakline!**)
 - And many more! See the [official guide](https://xournalpp.github.io/guide/overview/).
 
+## Cambios y características principales de este fork (Xournal++ Vibe)
+
+- **Auto breakline** (ajuste automático de línea en texto).
+- **Invertir Colores (Ctrl+I)** interactivo en el lienzo, trazos, cajas de texto, LaTeX, miniaturas y fondo.
+- **Fechas** integradas en el documento visual y en el formato XML.
+- **Navegación y vista:** Autoscroll mientras se escribe y opción para hacer scroll a la última anotación.
+- **Mejoras Pango/LaTeX:** Soporte de Pango HTML markup, traducción de LaTeX a Pango HTML, y reemplazo de símbolos LaTeX por Unicode en cajas de texto. Modificación de tamaños e interlineado.
+- **Exportación:** Exportación a PDF mediante script de Python (con y sin fondo).

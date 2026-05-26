@@ -303,7 +303,16 @@ static auto gtk_xournal_draw(GtkWidget* widget, cairo_t* cr) -> gboolean {
 
     // Draw background
     Settings* settings = xournal->view->getControl()->getSettings();
-    Util::cairo_set_source_rgbi(cr, settings->getBackgroundColor());
+    Color bgColor = settings->getBackgroundColor();
+    if (xournal->view->getControl()->isInvertColors()) {
+        uint32_t argb = static_cast<uint32_t>(bgColor);
+        uint32_t a = argb & 0xFF000000;
+        uint32_t r = 0x00FF0000 - (argb & 0x00FF0000);
+        uint32_t g = 0x0000FF00 - (argb & 0x0000FF00);
+        uint32_t b = 0x000000FF - (argb & 0x000000FF);
+        bgColor = Color(a | r | g | b);
+    }
+    Util::cairo_set_source_rgbi(cr, bgColor);
     cairo_paint(cr);
 
     // Add a padding for the shadow of the pages

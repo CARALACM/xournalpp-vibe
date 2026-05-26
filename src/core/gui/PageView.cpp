@@ -1070,6 +1070,14 @@ auto XojPageView::paintPage(cairo_t* cr, GdkRectangle* rect) -> bool {
         v->draw(cr);
     }
 
+    if (this->xournal->getControl()->isInvertColors()) {
+        xoj::util::CairoSaveGuard saveGuard(cr);
+        cairo_set_operator(cr, CAIRO_OPERATOR_DIFFERENCE);
+        cairo_set_source_rgb(cr, 1.0, 1.0, 1.0);
+        cairo_rectangle(cr, 0, 0, page->getWidth(), page->getHeight());
+        cairo_fill(cr);
+    }
+
     return true;
 }
 

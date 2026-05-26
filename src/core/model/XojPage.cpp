@@ -161,13 +161,19 @@ void XojPage::setBackgroundImage(BackgroundImage img) { this->backgroundImage = 
 
 auto XojPage::getSelectedLayer() -> Layer* {
     xoj_assert(!layer.empty());
-    size_t layer = getSelectedLayerId();
+    size_t layerIdx = getSelectedLayerId();
 
-    if (layer > 0) {
-        layer--;
+    if (layerIdx > 0) {
+        layerIdx--;
     }
 
-    return this->layer[layer];
+    if (layerIdx >= this->layer.size()) {
+        g_warning("XojPage::getSelectedLayer() out of bounds! layerIdx=%zu, size=%zu. Clamping to valid range.", layerIdx, this->layer.size());
+        layerIdx = this->layer.size() - 1;
+        this->currentLayer = layerIdx + 1; // Correct the internal state
+    }
+
+    return this->layer[layerIdx];
 }
 
 auto XojPage::getBackgroundName() const -> std::string { return backgroundName.value_or(_("Background")); }

@@ -4,6 +4,7 @@
 #include <memory>
 
 #include "control/LatexController.h"
+#include "control/Control.h"
 #include "model/TexImage.h"
 #include "util/Range.h"
 
@@ -74,6 +75,14 @@ void AbstractLatexDialog::previewDrawFunc(GtkDrawingArea*, cairo_t* cr, int widt
     cairo_translate(cr, 0.5 * extraHorizontalSpace, 0.5 * extraVerticalSpace);
     cairo_scale(cr, zoom, zoom);
     self->previewMask.paintTo(cr);
+
+    if (self->texCtrl->control->isInvertColors()) {
+        cairo_identity_matrix(cr);
+        cairo_set_operator(cr, CAIRO_OPERATOR_DIFFERENCE);
+        cairo_set_source_rgb(cr, 1.0, 1.0, 1.0);
+        cairo_rectangle(cr, 0, 0, width, height);
+        cairo_fill(cr);
+    }
 }
 
 void AbstractLatexDialog::populateStandardWidgetsFromBuilder(Builder& builder) {

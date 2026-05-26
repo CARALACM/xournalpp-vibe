@@ -150,3 +150,9 @@ void SidebarPreviewBase::pageInserted(size_t page) {}
 void SidebarPreviewBase::openPreviewContextMenu(GdkEvent* currentEvent) {
     gtk_menu_popup_at_pointer(contextMenu.get(), currentEvent);
 }
+
+void SidebarPreviewBase::repaintPreviews() {
+    for (auto const& preview : this->previews) {
+        preview->repaint();
+    }
+}

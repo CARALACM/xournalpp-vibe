@@ -1022,6 +1022,38 @@ void Control::setViewPairedPages(bool enabled) {
     scrollHandler->scrollToPage(getCurrentPageNo());
 }
 
+bool Control::getInvertColorsOverride() const {
+    return this->invertColorsOverride;
+}
+
+void Control::setInvertColorsOverride(bool overrideState) {
+    this->invertColorsOverride = overrideState;
+    this->themeChanged();
+}
+
+bool Control::isInvertColors() const {
+    bool isDark = false;
+    if (this->win) {
+        isDark = this->win->isDarkTheme();
+    }
+    return isDark ^ this->invertColorsOverride;
+}
+
+void Control::themeChanged() {
+    if (this->win && this->win->getXournal()) {
+        XournalView* xournal = this->win->getXournal();
+        for (auto const& pageView : xournal->getViewPages()) {
+            pageView->rerenderPage();
+        }
+        xournal->layoutPages();
+        xournal->forceUpdatePagenumbers();
+        if (this->sidebar) {
+            this->sidebar->repaintPreviews();
+        }
+        Util::execInUiThread([w = xournal->getWidget()]() { gtk_widget_queue_draw(w); });
+    }
+}
+
 void Control::setViewFullscreenMode(bool enabled) {
     if (enabled) {
         this->loadViewMode(VIEW_MODE_FULLSCREEN);
@@ -2831,9 +2863,14 @@ void Control::ensureDateLabels(Document* document) {
             layers.insert(layers.begin(), new Layer());
         }
 
-        // 5. Ensure the currently selected layer is not "Dates"
+        // 5. Validate the selected layer index and ensure it is not "Dates"
         size_t currentId = page->getSelectedLayerId();
-        if (currentId != 0 && page->getSelectedLayer()->getName() == "Dates") {
+        if (currentId > layers.size()) {
+            currentId = layers.size();
+            page->setSelectedLayerId(currentId);
+        }
+
+        if (currentId != 0 && page->getSelectedLayer() && page->getSelectedLayer()->getName() == "Dates") {
             for (size_t i = 0; i < layers.size(); ++i) {
                 if (layers[i]->getName() != "Dates") {
                     page->setSelectedLayerId(i + 1); // IDs are 1-based

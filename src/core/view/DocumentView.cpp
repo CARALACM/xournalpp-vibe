@@ -19,6 +19,8 @@
  */
 void DocumentView::setMarkAudioStroke(bool markAudioStroke) { this->markAudioStroke = markAudioStroke; }
 
+void DocumentView::setInvertColors(bool invertColors) { this->invertColors = invertColors; }
+
 void DocumentView::setPdfCache(PdfCache* cache) { pdfCache = cache; }
 
 /**
@@ -53,6 +55,14 @@ void DocumentView::finializeDrawing() {
             g_message("DBG:rerender complete");
         }
     });
+
+    if (this->invertColors) {
+        cairo_save(cr);
+        cairo_set_operator(cr, CAIRO_OPERATOR_DIFFERENCE);
+        cairo_set_source_rgb(cr, 1.0, 1.0, 1.0);
+        cairo_paint(cr);
+        cairo_restore(cr);
+    }
 
     this->page = nullptr;
     this->cr = nullptr;

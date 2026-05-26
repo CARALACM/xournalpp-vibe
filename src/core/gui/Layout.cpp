@@ -280,7 +280,18 @@ void Layout::updateVisibility() {
     }
     this->previouslyVisiblePages = std::move(visiblePages);
     if (mostPageNr) {
-        this->view->getControl()->firePageSelected(*mostPageNr);
+        // If a text editor is active, do not automatically change the selected page via scrolling,
+        // as this would unexpectedly finalize and destroy the active text editor.
+        bool hasActiveTextEditor = false;
+        for (auto&& pageView : this->view->getViewPages()) {
+            if (pageView->getTextEditor()) {
+                hasActiveTextEditor = true;
+                break;
+            }
+        }
+        if (!hasActiveTextEditor) {
+            this->view->getControl()->firePageSelected(*mostPageNr);
+        }
     }
 }
 

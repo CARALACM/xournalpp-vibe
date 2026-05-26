@@ -304,6 +304,7 @@ void MainWindow::updateColorscheme() {
     }
     g_signal_handlers_unblock_by_func(gtk_widget_get_settings(this->window), reinterpret_cast<gpointer>(themeCallback),
                                       this);
+    this->control->themeChanged();
 }
 
 void MainWindow::initXournalWidget() {

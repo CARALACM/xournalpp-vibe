@@ -948,6 +948,13 @@ void XojPageView::drawLoadingPage(cairo_t* cr) {
                   (page->getHeight() - ex.height) / 2 - ex.y_bearing);
     cairo_text_path(cr, txtLoading.c_str());
 
+    if (this->xournal->getControl()->isInvertColors()) {
+        cairo_set_operator(cr, CAIRO_OPERATOR_DIFFERENCE);
+        cairo_set_source_rgb(cr, 1.0, 1.0, 1.0);
+        cairo_rectangle(cr, 0, 0, page->getWidth(), page->getHeight());
+        cairo_fill(cr);
+    }
+
     rerenderPage();
 }
 
